@@ -220,6 +220,8 @@ namespace ZamtelWebAPI.Controllers
         {
             BackOfficeAgentValidators backOfficeAgentValidators = new BackOfficeAgentValidators(_context);
 
+            NextOfKin nextOfKinGlobal = new NextOfKin();
+
             var doesBackOfficeAgentMobileNumberExist = backOfficeAgentValidators.IsBackOfficeAgentMobileNumberExist(backOfficeAgentViewModel.MobileNumber);
 
             if (doesBackOfficeAgentMobileNumberExist)
@@ -242,92 +244,252 @@ namespace ZamtelWebAPI.Controllers
 
             if (doesNextOfKinExist)
             {
-                ModelState.AddModelError("Error", "Back office agent cannot be created. Next of kin mobile number " + backOfficeAgentViewModel.MobileNumber + " already exists.");
-
-                return BadRequest(ModelState);
+                nextOfKinGlobal = _context.NextOfKins.Where(x => x.MobileNumber == backOfficeAgentViewModel.MobileNumber).FirstOrDefault();
             }
 
-            NextOfKin nextOfKin = new NextOfKin()
+            if (nextOfKinGlobal != null)
             {
-                Firstname = backOfficeAgentViewModel.NextOfKin.Firstname,
-                Middlename = backOfficeAgentViewModel.NextOfKin.Middlename,
-                Lastname = backOfficeAgentViewModel.NextOfKin.Lastname,
-                MobileNumber = backOfficeAgentViewModel.NextOfKin.MobileNumber,
-                CreatedByUserId = backOfficeAgentViewModel.CreatedByUserId,
-                DateTimeCreated = DateTime.Now
-            };
-
-            _context.NextOfKins.Add(nextOfKin);
-            await _context.SaveChangesAsync();
-
-            var lastAddedNextOfKin = _context.NextOfKins.OrderByDescending(x => x.Id).FirstOrDefault();
-
-            backOfficeAgentViewModel.CreatedByUserId = 3;
-
-            if (lastAddedNextOfKin != null)
-            {
-                BackOfficeAgent backOfficeAgent = new BackOfficeAgent()
+                if (nextOfKinGlobal.Id > 0)
                 {
-                    Firstname = backOfficeAgentViewModel.Firstname,
-                    Middlename = backOfficeAgentViewModel.Middlename,
-                    Lastname = backOfficeAgentViewModel.Lastname,
-                    SupervisorId = backOfficeAgentViewModel.SupervisorId,
-                    Password = backOfficeAgentViewModel.Password,
-                    Gender = backOfficeAgentViewModel.Gender,
-                    Area = backOfficeAgentViewModel.Area,
-                    TownId = backOfficeAgentViewModel.TownId,
-                    ProvinceId = backOfficeAgentViewModel.ProvinceId,
-                    NationalityId = backOfficeAgentViewModel.NationalityId,
-                    NationalIdNumber = backOfficeAgentViewModel.NationalIdNumber,
-                    MobileNumber = backOfficeAgentViewModel.MobileNumber,
-                    AlternativeMobileNumber = backOfficeAgentViewModel.AlternativeMobileNumber,
-                    PotrailUrl = backOfficeAgentViewModel.PotrailUrl,
-                    NationalIdFrontUrl = backOfficeAgentViewModel.NationalIdFrontUrl,
-                    NationalIdBackUrl = backOfficeAgentViewModel.NationalIdBackUrl,
-                    SignatureUrl = backOfficeAgentViewModel.SignatureUrl,
-                    AgentContractFormUrl = backOfficeAgentViewModel.AgentContractFormUrl,
-                    IsVerified = backOfficeAgentViewModel.IsVerified,
-                    NextOfKinId = lastAddedNextOfKin.Id,
-                    DateTimeCreated = DateTime.Now,
-                    CreatedByUserId = backOfficeAgentViewModel.CreatedByUserId,
-                    RoleId = backOfficeAgentViewModel.RoleId
-                };
+                    nextOfKinGlobal.Firstname = backOfficeAgentViewModel.NextOfKin.Firstname;
+                    nextOfKinGlobal.Middlename = backOfficeAgentViewModel.NextOfKin.Middlename;
+                    nextOfKinGlobal.Lastname = backOfficeAgentViewModel.NextOfKin.Lastname;
+                    nextOfKinGlobal.MobileNumber = backOfficeAgentViewModel.NextOfKin.MobileNumber;
+                    nextOfKinGlobal.CreatedByUserId = backOfficeAgentViewModel.CreatedByUserId;
+                    nextOfKinGlobal.DateTimeCreated = DateTime.Now;
 
-                _context.BackOfficeAgents.Add(backOfficeAgent);
-                await _context.SaveChangesAsync();
+                    _context.NextOfKins.Add(nextOfKinGlobal);
+                    await _context.SaveChangesAsync();
 
-                var lastAddedBackOfficeAgent = _context.BackOfficeAgents.OrderByDescending(x => x.Id).FirstOrDefault();
+                    backOfficeAgentViewModel.CreatedByUserId = 3;
 
-                var backOfficeAgentViewModel1 = new BackOfficeAgentViewModel()
+                    BackOfficeAgent backOfficeAgent = new BackOfficeAgent()
+                    {
+                        Firstname = backOfficeAgentViewModel.Firstname,
+                        Middlename = backOfficeAgentViewModel.Middlename,
+                        Lastname = backOfficeAgentViewModel.Lastname,
+                        SupervisorId = backOfficeAgentViewModel.SupervisorId,
+                        Password = backOfficeAgentViewModel.Password,
+                        Gender = backOfficeAgentViewModel.Gender,
+                        Area = backOfficeAgentViewModel.Area,
+                        TownId = backOfficeAgentViewModel.TownId,
+                        ProvinceId = backOfficeAgentViewModel.ProvinceId,
+                        NationalityId = backOfficeAgentViewModel.NationalityId,
+                        NationalIdNumber = backOfficeAgentViewModel.NationalIdNumber,
+                        MobileNumber = backOfficeAgentViewModel.MobileNumber,
+                        AlternativeMobileNumber = backOfficeAgentViewModel.AlternativeMobileNumber,
+                        PotrailUrl = backOfficeAgentViewModel.PotrailUrl,
+                        NationalIdFrontUrl = backOfficeAgentViewModel.NationalIdFrontUrl,
+                        NationalIdBackUrl = backOfficeAgentViewModel.NationalIdBackUrl,
+                        SignatureUrl = backOfficeAgentViewModel.SignatureUrl,
+                        AgentContractFormUrl = backOfficeAgentViewModel.AgentContractFormUrl,
+                        IsVerified = backOfficeAgentViewModel.IsVerified,
+                        NextOfKinId = nextOfKinGlobal.Id,
+                        DateTimeCreated = DateTime.Now,
+                        CreatedByUserId = backOfficeAgentViewModel.CreatedByUserId,
+                        RoleId = backOfficeAgentViewModel.RoleId
+                    };
+
+                    _context.BackOfficeAgents.Add(backOfficeAgent);
+                    await _context.SaveChangesAsync();
+
+                    var lastAddedBackOfficeAgent = _context.BackOfficeAgents.OrderByDescending(x => x.Id).FirstOrDefault();
+
+                    var backOfficeAgentViewModel1 = new BackOfficeAgentViewModel()
+                    {
+                        Id = lastAddedBackOfficeAgent.Id,
+                        Firstname = lastAddedBackOfficeAgent.Firstname,
+                        Middlename = lastAddedBackOfficeAgent.Middlename,
+                        Lastname = lastAddedBackOfficeAgent.Lastname,
+                        SupervisorId = lastAddedBackOfficeAgent.SupervisorId,
+                        Password = lastAddedBackOfficeAgent.Password,
+                        Gender = lastAddedBackOfficeAgent.Gender,
+                        Area = lastAddedBackOfficeAgent.Area,
+                        TownId = lastAddedBackOfficeAgent.TownId,
+                        ProvinceId = lastAddedBackOfficeAgent.ProvinceId,
+                        NationalityId = lastAddedBackOfficeAgent.NationalityId,
+                        NationalIdNumber = lastAddedBackOfficeAgent.NationalIdNumber,
+                        MobileNumber = lastAddedBackOfficeAgent.MobileNumber,
+                        AlternativeMobileNumber = lastAddedBackOfficeAgent.AlternativeMobileNumber,
+                        IsVerified = lastAddedBackOfficeAgent.IsVerified,
+                        NextOfKin = _context.NextOfKins.Where(x => x.Id == lastAddedBackOfficeAgent.NextOfKinId).FirstOrDefault(),
+                        DateTimeCreated = lastAddedBackOfficeAgent.DateTimeCreated,
+                        CreatedByUserId = lastAddedBackOfficeAgent.CreatedByUserId,
+                        ModifiedByUserId = lastAddedBackOfficeAgent.ModifiedByUserId
+                    };
+
+                    return CreatedAtAction("GetBackOfficeAgent", new { id = lastAddedBackOfficeAgent.Id }, backOfficeAgentViewModel1);
+                }
+                else
                 {
-                    Id = lastAddedBackOfficeAgent.Id,
-                    Firstname = lastAddedBackOfficeAgent.Firstname,
-                    Middlename = lastAddedBackOfficeAgent.Middlename,
-                    Lastname = lastAddedBackOfficeAgent.Lastname,
-                    SupervisorId = lastAddedBackOfficeAgent.SupervisorId,
-                    Password = lastAddedBackOfficeAgent.Password,
-                    Gender = lastAddedBackOfficeAgent.Gender,
-                    Area = lastAddedBackOfficeAgent.Area,
-                    TownId = lastAddedBackOfficeAgent.TownId,
-                    ProvinceId = lastAddedBackOfficeAgent.ProvinceId,
-                    NationalityId = lastAddedBackOfficeAgent.NationalityId,
-                    NationalIdNumber = lastAddedBackOfficeAgent.NationalIdNumber,
-                    MobileNumber = lastAddedBackOfficeAgent.MobileNumber,
-                    AlternativeMobileNumber = lastAddedBackOfficeAgent.AlternativeMobileNumber,
-                    IsVerified = lastAddedBackOfficeAgent.IsVerified,
-                    NextOfKin = _context.NextOfKins.Where(x => x.Id == lastAddedBackOfficeAgent.NextOfKinId).FirstOrDefault(),
-                    DateTimeCreated = lastAddedBackOfficeAgent.DateTimeCreated,
-                    CreatedByUserId = lastAddedBackOfficeAgent.CreatedByUserId,
-                    ModifiedByUserId = lastAddedBackOfficeAgent.ModifiedByUserId
-                };
+                    NextOfKin nextOfKin = new NextOfKin()
+                    {
+                        Firstname = backOfficeAgentViewModel.NextOfKin.Firstname,
+                        Middlename = backOfficeAgentViewModel.NextOfKin.Middlename,
+                        Lastname = backOfficeAgentViewModel.NextOfKin.Lastname,
+                        MobileNumber = backOfficeAgentViewModel.NextOfKin.MobileNumber,
+                        CreatedByUserId = backOfficeAgentViewModel.CreatedByUserId,
+                        DateTimeCreated = DateTime.Now
+                    };
 
-                return CreatedAtAction("GetBackOfficeAgent", new { id = lastAddedBackOfficeAgent.Id }, backOfficeAgentViewModel1);
+                    _context.NextOfKins.Add(nextOfKin);
+                    await _context.SaveChangesAsync();
+
+                    var lastAddedNextOfKin = _context.NextOfKins.OrderByDescending(x => x.Id).FirstOrDefault();
+
+                    backOfficeAgentViewModel.CreatedByUserId = 3;
+
+                    if (lastAddedNextOfKin != null)
+                    {
+                        BackOfficeAgent backOfficeAgent = new BackOfficeAgent()
+                        {
+                            Firstname = backOfficeAgentViewModel.Firstname,
+                            Middlename = backOfficeAgentViewModel.Middlename,
+                            Lastname = backOfficeAgentViewModel.Lastname,
+                            SupervisorId = backOfficeAgentViewModel.SupervisorId,
+                            Password = backOfficeAgentViewModel.Password,
+                            Gender = backOfficeAgentViewModel.Gender,
+                            Area = backOfficeAgentViewModel.Area,
+                            TownId = backOfficeAgentViewModel.TownId,
+                            ProvinceId = backOfficeAgentViewModel.ProvinceId,
+                            NationalityId = backOfficeAgentViewModel.NationalityId,
+                            NationalIdNumber = backOfficeAgentViewModel.NationalIdNumber,
+                            MobileNumber = backOfficeAgentViewModel.MobileNumber,
+                            AlternativeMobileNumber = backOfficeAgentViewModel.AlternativeMobileNumber,
+                            PotrailUrl = backOfficeAgentViewModel.PotrailUrl,
+                            NationalIdFrontUrl = backOfficeAgentViewModel.NationalIdFrontUrl,
+                            NationalIdBackUrl = backOfficeAgentViewModel.NationalIdBackUrl,
+                            SignatureUrl = backOfficeAgentViewModel.SignatureUrl,
+                            AgentContractFormUrl = backOfficeAgentViewModel.AgentContractFormUrl,
+                            IsVerified = backOfficeAgentViewModel.IsVerified,
+                            NextOfKinId = lastAddedNextOfKin.Id,
+                            DateTimeCreated = DateTime.Now,
+                            CreatedByUserId = backOfficeAgentViewModel.CreatedByUserId,
+                            RoleId = backOfficeAgentViewModel.RoleId
+                        };
+
+                        _context.BackOfficeAgents.Add(backOfficeAgent);
+                        await _context.SaveChangesAsync();
+
+                        var lastAddedBackOfficeAgent = _context.BackOfficeAgents.OrderByDescending(x => x.Id).FirstOrDefault();
+
+                        var backOfficeAgentViewModel1 = new BackOfficeAgentViewModel()
+                        {
+                            Id = lastAddedBackOfficeAgent.Id,
+                            Firstname = lastAddedBackOfficeAgent.Firstname,
+                            Middlename = lastAddedBackOfficeAgent.Middlename,
+                            Lastname = lastAddedBackOfficeAgent.Lastname,
+                            SupervisorId = lastAddedBackOfficeAgent.SupervisorId,
+                            Password = lastAddedBackOfficeAgent.Password,
+                            Gender = lastAddedBackOfficeAgent.Gender,
+                            Area = lastAddedBackOfficeAgent.Area,
+                            TownId = lastAddedBackOfficeAgent.TownId,
+                            ProvinceId = lastAddedBackOfficeAgent.ProvinceId,
+                            NationalityId = lastAddedBackOfficeAgent.NationalityId,
+                            NationalIdNumber = lastAddedBackOfficeAgent.NationalIdNumber,
+                            MobileNumber = lastAddedBackOfficeAgent.MobileNumber,
+                            AlternativeMobileNumber = lastAddedBackOfficeAgent.AlternativeMobileNumber,
+                            IsVerified = lastAddedBackOfficeAgent.IsVerified,
+                            NextOfKin = _context.NextOfKins.Where(x => x.Id == lastAddedBackOfficeAgent.NextOfKinId).FirstOrDefault(),
+                            DateTimeCreated = lastAddedBackOfficeAgent.DateTimeCreated,
+                            CreatedByUserId = lastAddedBackOfficeAgent.CreatedByUserId,
+                            ModifiedByUserId = lastAddedBackOfficeAgent.ModifiedByUserId
+                        };
+
+                        return CreatedAtAction("GetBackOfficeAgent", new { id = lastAddedBackOfficeAgent.Id }, backOfficeAgentViewModel1);
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("Error", "There has been a fatal error in saving your Next of Kin Details");
+
+                        return BadRequest(ModelState);
+                    }
+                }
             }
             else
             {
-                ModelState.AddModelError("Error", "There has been a fatal error in saving your Next of Kin Details");
+                NextOfKin nextOfKin = new NextOfKin()
+                {
+                    Firstname = backOfficeAgentViewModel.NextOfKin.Firstname,
+                    Middlename = backOfficeAgentViewModel.NextOfKin.Middlename,
+                    Lastname = backOfficeAgentViewModel.NextOfKin.Lastname,
+                    MobileNumber = backOfficeAgentViewModel.NextOfKin.MobileNumber,
+                    CreatedByUserId = backOfficeAgentViewModel.CreatedByUserId,
+                    DateTimeCreated = DateTime.Now
+                };
 
-                return BadRequest(ModelState);
+                _context.NextOfKins.Add(nextOfKin);
+                await _context.SaveChangesAsync();
+
+                var lastAddedNextOfKin = _context.NextOfKins.OrderByDescending(x => x.Id).FirstOrDefault();
+
+                backOfficeAgentViewModel.CreatedByUserId = 3;
+
+                if (lastAddedNextOfKin != null)
+                {
+                    BackOfficeAgent backOfficeAgent = new BackOfficeAgent()
+                    {
+                        Firstname = backOfficeAgentViewModel.Firstname,
+                        Middlename = backOfficeAgentViewModel.Middlename,
+                        Lastname = backOfficeAgentViewModel.Lastname,
+                        SupervisorId = backOfficeAgentViewModel.SupervisorId,
+                        Password = backOfficeAgentViewModel.Password,
+                        Gender = backOfficeAgentViewModel.Gender,
+                        Area = backOfficeAgentViewModel.Area,
+                        TownId = backOfficeAgentViewModel.TownId,
+                        ProvinceId = backOfficeAgentViewModel.ProvinceId,
+                        NationalityId = backOfficeAgentViewModel.NationalityId,
+                        NationalIdNumber = backOfficeAgentViewModel.NationalIdNumber,
+                        MobileNumber = backOfficeAgentViewModel.MobileNumber,
+                        AlternativeMobileNumber = backOfficeAgentViewModel.AlternativeMobileNumber,
+                        PotrailUrl = backOfficeAgentViewModel.PotrailUrl,
+                        NationalIdFrontUrl = backOfficeAgentViewModel.NationalIdFrontUrl,
+                        NationalIdBackUrl = backOfficeAgentViewModel.NationalIdBackUrl,
+                        SignatureUrl = backOfficeAgentViewModel.SignatureUrl,
+                        AgentContractFormUrl = backOfficeAgentViewModel.AgentContractFormUrl,
+                        IsVerified = backOfficeAgentViewModel.IsVerified,
+                        NextOfKinId = lastAddedNextOfKin.Id,
+                        DateTimeCreated = DateTime.Now,
+                        CreatedByUserId = backOfficeAgentViewModel.CreatedByUserId,
+                        RoleId = backOfficeAgentViewModel.RoleId
+                    };
+
+                    _context.BackOfficeAgents.Add(backOfficeAgent);
+                    await _context.SaveChangesAsync();
+
+                    var lastAddedBackOfficeAgent = _context.BackOfficeAgents.OrderByDescending(x => x.Id).FirstOrDefault();
+
+                    var backOfficeAgentViewModel1 = new BackOfficeAgentViewModel()
+                    {
+                        Id = lastAddedBackOfficeAgent.Id,
+                        Firstname = lastAddedBackOfficeAgent.Firstname,
+                        Middlename = lastAddedBackOfficeAgent.Middlename,
+                        Lastname = lastAddedBackOfficeAgent.Lastname,
+                        SupervisorId = lastAddedBackOfficeAgent.SupervisorId,
+                        Password = lastAddedBackOfficeAgent.Password,
+                        Gender = lastAddedBackOfficeAgent.Gender,
+                        Area = lastAddedBackOfficeAgent.Area,
+                        TownId = lastAddedBackOfficeAgent.TownId,
+                        ProvinceId = lastAddedBackOfficeAgent.ProvinceId,
+                        NationalityId = lastAddedBackOfficeAgent.NationalityId,
+                        NationalIdNumber = lastAddedBackOfficeAgent.NationalIdNumber,
+                        MobileNumber = lastAddedBackOfficeAgent.MobileNumber,
+                        AlternativeMobileNumber = lastAddedBackOfficeAgent.AlternativeMobileNumber,
+                        IsVerified = lastAddedBackOfficeAgent.IsVerified,
+                        NextOfKin = _context.NextOfKins.Where(x => x.Id == lastAddedBackOfficeAgent.NextOfKinId).FirstOrDefault(),
+                        DateTimeCreated = lastAddedBackOfficeAgent.DateTimeCreated,
+                        CreatedByUserId = lastAddedBackOfficeAgent.CreatedByUserId,
+                        ModifiedByUserId = lastAddedBackOfficeAgent.ModifiedByUserId
+                    };
+
+                    return CreatedAtAction("GetBackOfficeAgent", new { id = lastAddedBackOfficeAgent.Id }, backOfficeAgentViewModel1);
+                }
+                else
+                {
+                    ModelState.AddModelError("Error", "There has been a fatal error in saving your Next of Kin Details");
+
+                    return BadRequest(ModelState);
+                }
             }
         }
 
@@ -353,7 +515,7 @@ namespace ZamtelWebAPI.Controllers
                 return NotFound(ModelState);
             }
 
-            _context.NextOfKins.Remove(nextOfKin);
+            //_context.NextOfKins.Remove(nextOfKin);
             _context.BackOfficeAgents.Remove(backOfficeAgent);
             await _context.SaveChangesAsync();
 

@@ -36,6 +36,7 @@ namespace ZamtelWebAPI.Controllers
 
                 var agentViewModel = new AgentViewModel()
                 {
+                    Id = agent.Id,
                     Firstname = agent.Firstname,
                     Middlename = agent.Middlename,
                     Lastname = agent.Lastname,
@@ -57,7 +58,8 @@ namespace ZamtelWebAPI.Controllers
                     SignatureUrl = agent.SignatureUrl,
                     AgentContractFormUrl = agent.AgentContractFormUrl,
                     IsVerified = agent.IsVerified,
-                    NextOfKin = _context.NextOfKins.Where(x => x.Id == agent.NextOfKinId).FirstOrDefault(),
+                    NextOfKinId = agent.NextOfKinId,
+                    NextOfKin = nextOfKin,
                     DateTimeCreated = agent.DateTimeCreated,
                     CreatedByUserId = agent.CreatedByUserId,
                     ModifiedByUserId = agent.ModifiedByUserId
@@ -165,7 +167,7 @@ namespace ZamtelWebAPI.Controllers
             }
 
             var agentToBeUpdated = _context.Agents.Where(x => x.Id == id || x.Id == agentViewModel.Id).FirstOrDefault();
-                       
+
             agentToBeUpdated.Firstname = agentViewModel.Firstname;
             agentToBeUpdated.Middlename = agentViewModel.Middlename;
             agentToBeUpdated.Lastname = agentViewModel.Lastname;
@@ -223,6 +225,8 @@ namespace ZamtelWebAPI.Controllers
         {
             AgentValidators agentValidators = new AgentValidators(_context);
 
+            NextOfKin nextOfKinGlobal = new NextOfKin();
+
             var doesAgentMobileNumberExist = agentValidators.IsAgentMobileNumberExist(agentViewModel.MobileNumber);
 
             if (doesAgentMobileNumberExist)
@@ -245,97 +249,265 @@ namespace ZamtelWebAPI.Controllers
 
             if (doesNextOfKinExist)
             {
-                ModelState.AddModelError("Error", "Agent cannot be created. Next of kin mobile number " + agentViewModel.MobileNumber + " already exists.");
-
-                return BadRequest(ModelState);
+                nextOfKinGlobal = _context.NextOfKins.Where(x => x.MobileNumber == agentViewModel.MobileNumber).FirstOrDefault();
             }
 
-            NextOfKin nextOfKin = new NextOfKin()
+            if (nextOfKinGlobal != null)
             {
-                Firstname = agentViewModel.NextOfKin.Firstname,
-                Middlename = agentViewModel.NextOfKin.Middlename,
-                Lastname = agentViewModel.NextOfKin.Lastname,
-                MobileNumber = agentViewModel.NextOfKin.MobileNumber,
-                CreatedByUserId = agentViewModel.CreatedByUserId,
-                DateTimeCreated = DateTime.Now
-            };
-
-            _context.NextOfKins.Add(nextOfKin);
-            await _context.SaveChangesAsync();
-
-            var lastAddedNextOfKin = _context.NextOfKins.OrderByDescending(x => x.Id).FirstOrDefault();
-
-            agentViewModel.CreatedByUserId = 3;
-
-            if (lastAddedNextOfKin != null)
-            {
-                Agent agent = new Agent()
+                if (nextOfKinGlobal.Id > 0)
                 {
-                    Firstname = agentViewModel.Firstname,
-                    Middlename = agentViewModel.Middlename,
-                    Lastname = agentViewModel.Lastname,
-                    DeviceOwnership = agentViewModel.DeviceOwnership,
-                    SupervisorId = agentViewModel.SupervisorId,
-                    Password = agentViewModel.Password,
-                    Gender = agentViewModel.Gender,
-                    Area = agentViewModel.Area,
-                    TownId = agentViewModel.TownId,
-                    ProvinceId = agentViewModel.ProvinceId,
-                    NationalityId = agentViewModel.NationalityId,
-                    IdNumber = agentViewModel.IdNumber,
-                    MobileNumber = agentViewModel.MobileNumber,
-                    AlternativeMobileNumber = agentViewModel.AlternativeMobileNumber,
-                    AgentCode = agentViewModel.AgentCode,
-                    PotrailUrl = agentViewModel.PotrailUrl,
-                    NationalIdFrontUrl = agentViewModel.NationalIdFrontUrl,
-                    NationalIdBackUrl = agentViewModel.NationalIdBackUrl,
-                    SignatureUrl = agentViewModel.SignatureUrl,
-                    AgentContractFormUrl = agentViewModel.AgentContractFormUrl,
-                    IsVerified = agentViewModel.IsVerified,
-                    NextOfKinId = lastAddedNextOfKin.Id,
-                    DateTimeCreated = DateTime.Now,
-                    CreatedByUserId = agentViewModel.CreatedByUserId,
-                    ModifiedByUserId = agentViewModel.ModifiedByUserId
-                };
+                    nextOfKinGlobal.Firstname = agentViewModel.NextOfKin.Firstname;
+                    nextOfKinGlobal.Middlename = agentViewModel.NextOfKin.Middlename;
+                    nextOfKinGlobal.Lastname = agentViewModel.NextOfKin.Lastname;
+                    nextOfKinGlobal.MobileNumber = agentViewModel.NextOfKin.MobileNumber;
+                    nextOfKinGlobal.CreatedByUserId = agentViewModel.CreatedByUserId;
+                    nextOfKinGlobal.DateTimeCreated = DateTime.Now;
 
-                _context.Agents.Add(agent);
-                await _context.SaveChangesAsync();
+                    _context.NextOfKins.Add(nextOfKinGlobal);
+                    await _context.SaveChangesAsync();
 
-                var lastAddedAgent = _context.Agents.OrderByDescending(x => x.Id).FirstOrDefault();
+                    agentViewModel.CreatedByUserId = 3;
 
-                var agentViewModel1 = new AgentViewModel()
+                    Agent agent = new Agent()
+                    {
+                        Firstname = agentViewModel.Firstname,
+                        Middlename = agentViewModel.Middlename,
+                        Lastname = agentViewModel.Lastname,
+                        DeviceOwnership = agentViewModel.DeviceOwnership,
+                        SupervisorId = agentViewModel.SupervisorId,
+                        Password = agentViewModel.Password,
+                        Gender = agentViewModel.Gender,
+                        Area = agentViewModel.Area,
+                        TownId = agentViewModel.TownId,
+                        ProvinceId = agentViewModel.ProvinceId,
+                        NationalityId = agentViewModel.NationalityId,
+                        IdNumber = agentViewModel.IdNumber,
+                        MobileNumber = agentViewModel.MobileNumber,
+                        AlternativeMobileNumber = agentViewModel.AlternativeMobileNumber,
+                        AgentCode = agentViewModel.AgentCode,
+                        PotrailUrl = agentViewModel.PotrailUrl,
+                        NationalIdFrontUrl = agentViewModel.NationalIdFrontUrl,
+                        NationalIdBackUrl = agentViewModel.NationalIdBackUrl,
+                        SignatureUrl = agentViewModel.SignatureUrl,
+                        AgentContractFormUrl = agentViewModel.AgentContractFormUrl,
+                        IsVerified = agentViewModel.IsVerified,
+                        NextOfKinId = nextOfKinGlobal.Id,
+                        DateTimeCreated = DateTime.Now,
+                        CreatedByUserId = agentViewModel.CreatedByUserId,
+                        ModifiedByUserId = agentViewModel.ModifiedByUserId
+                    };
+
+                    _context.Agents.Add(agent);
+                    await _context.SaveChangesAsync();
+
+                    var lastAddedAgent = _context.Agents.OrderByDescending(x => x.Id).FirstOrDefault();
+
+                    var agentViewModel1 = new AgentViewModel()
+                    {
+                        Id = lastAddedAgent.Id,
+                        Firstname = lastAddedAgent.Firstname,
+                        Middlename = lastAddedAgent.Middlename,
+                        Lastname = lastAddedAgent.Lastname,
+                        DeviceOwnership = lastAddedAgent.DeviceOwnership,
+                        SupervisorId = lastAddedAgent.SupervisorId,
+                        Password = lastAddedAgent.Password,
+                        Gender = lastAddedAgent.Gender,
+                        Area = lastAddedAgent.Area,
+                        TownId = lastAddedAgent.TownId,
+                        ProvinceId = lastAddedAgent.ProvinceId,
+                        NationalityId = lastAddedAgent.NationalityId,
+                        IdNumber = lastAddedAgent.IdNumber,
+                        MobileNumber = lastAddedAgent.MobileNumber,
+                        AlternativeMobileNumber = lastAddedAgent.AlternativeMobileNumber,
+                        AgentCode = lastAddedAgent.AgentCode,
+                        IsVerified = lastAddedAgent.IsVerified,
+                        NextOfKin = _context.NextOfKins.Where(x => x.Id == lastAddedAgent.NextOfKinId).FirstOrDefault(),
+                        DateTimeCreated = lastAddedAgent.DateTimeCreated,
+                        CreatedByUserId = lastAddedAgent.CreatedByUserId,
+                        ModifiedByUserId = lastAddedAgent.ModifiedByUserId
+                    };
+
+                    return CreatedAtAction("GetAgent", new { id = lastAddedAgent.Id }, agentViewModel1);
+                }
+                else
                 {
-                    Id = lastAddedAgent.Id,
-                    Firstname = lastAddedAgent.Firstname,
-                    Middlename = lastAddedAgent.Middlename,
-                    Lastname = lastAddedAgent.Lastname,
-                    DeviceOwnership = lastAddedAgent.DeviceOwnership,
-                    SupervisorId = lastAddedAgent.SupervisorId,
-                    Password = lastAddedAgent.Password,
-                    Gender = lastAddedAgent.Gender,
-                    Area = lastAddedAgent.Area,
-                    TownId = lastAddedAgent.TownId,
-                    ProvinceId = lastAddedAgent.ProvinceId,
-                    NationalityId = lastAddedAgent.NationalityId,
-                    IdNumber = lastAddedAgent.IdNumber,
-                    MobileNumber = lastAddedAgent.MobileNumber,
-                    AlternativeMobileNumber = lastAddedAgent.AlternativeMobileNumber,
-                    AgentCode = lastAddedAgent.AgentCode,
-                    IsVerified = lastAddedAgent.IsVerified,
-                    NextOfKin = _context.NextOfKins.Where(x => x.Id == lastAddedAgent.NextOfKinId).FirstOrDefault(),
-                    DateTimeCreated = lastAddedAgent.DateTimeCreated,
-                    CreatedByUserId = lastAddedAgent.CreatedByUserId,
-                    ModifiedByUserId = lastAddedAgent.ModifiedByUserId
-                };
+                    NextOfKin nextOfKin = new NextOfKin()
+                    {
+                        Firstname = agentViewModel.NextOfKin.Firstname,
+                        Middlename = agentViewModel.NextOfKin.Middlename,
+                        Lastname = agentViewModel.NextOfKin.Lastname,
+                        MobileNumber = agentViewModel.NextOfKin.MobileNumber,
+                        CreatedByUserId = agentViewModel.CreatedByUserId,
+                        DateTimeCreated = DateTime.Now
+                    };
 
-                return CreatedAtAction("GetAgent", new { id = lastAddedAgent.Id }, agentViewModel1);
+                    _context.NextOfKins.Add(nextOfKin);
+                    await _context.SaveChangesAsync();
+
+                    var lastAddedNextOfKin = _context.NextOfKins.OrderByDescending(x => x.Id).FirstOrDefault();
+
+                    agentViewModel.CreatedByUserId = 3;
+
+                    if (lastAddedNextOfKin != null)
+                    {
+                        Agent agent = new Agent()
+                        {
+                            Firstname = agentViewModel.Firstname,
+                            Middlename = agentViewModel.Middlename,
+                            Lastname = agentViewModel.Lastname,
+                            DeviceOwnership = agentViewModel.DeviceOwnership,
+                            SupervisorId = agentViewModel.SupervisorId,
+                            Password = agentViewModel.Password,
+                            Gender = agentViewModel.Gender,
+                            Area = agentViewModel.Area,
+                            TownId = agentViewModel.TownId,
+                            ProvinceId = agentViewModel.ProvinceId,
+                            NationalityId = agentViewModel.NationalityId,
+                            IdNumber = agentViewModel.IdNumber,
+                            MobileNumber = agentViewModel.MobileNumber,
+                            AlternativeMobileNumber = agentViewModel.AlternativeMobileNumber,
+                            AgentCode = agentViewModel.AgentCode,
+                            PotrailUrl = agentViewModel.PotrailUrl,
+                            NationalIdFrontUrl = agentViewModel.NationalIdFrontUrl,
+                            NationalIdBackUrl = agentViewModel.NationalIdBackUrl,
+                            SignatureUrl = agentViewModel.SignatureUrl,
+                            AgentContractFormUrl = agentViewModel.AgentContractFormUrl,
+                            IsVerified = agentViewModel.IsVerified,
+                            NextOfKinId = lastAddedNextOfKin.Id,
+                            DateTimeCreated = DateTime.Now,
+                            CreatedByUserId = agentViewModel.CreatedByUserId,
+                            ModifiedByUserId = agentViewModel.ModifiedByUserId
+                        };
+
+                        _context.Agents.Add(agent);
+                        await _context.SaveChangesAsync();
+
+                        var lastAddedAgent = _context.Agents.OrderByDescending(x => x.Id).FirstOrDefault();
+
+                        var agentViewModel1 = new AgentViewModel()
+                        {
+                            Id = lastAddedAgent.Id,
+                            Firstname = lastAddedAgent.Firstname,
+                            Middlename = lastAddedAgent.Middlename,
+                            Lastname = lastAddedAgent.Lastname,
+                            DeviceOwnership = lastAddedAgent.DeviceOwnership,
+                            SupervisorId = lastAddedAgent.SupervisorId,
+                            Password = lastAddedAgent.Password,
+                            Gender = lastAddedAgent.Gender,
+                            Area = lastAddedAgent.Area,
+                            TownId = lastAddedAgent.TownId,
+                            ProvinceId = lastAddedAgent.ProvinceId,
+                            NationalityId = lastAddedAgent.NationalityId,
+                            IdNumber = lastAddedAgent.IdNumber,
+                            MobileNumber = lastAddedAgent.MobileNumber,
+                            AlternativeMobileNumber = lastAddedAgent.AlternativeMobileNumber,
+                            AgentCode = lastAddedAgent.AgentCode,
+                            IsVerified = lastAddedAgent.IsVerified,
+                            NextOfKin = _context.NextOfKins.Where(x => x.Id == lastAddedAgent.NextOfKinId).FirstOrDefault(),
+                            DateTimeCreated = lastAddedAgent.DateTimeCreated,
+                            CreatedByUserId = lastAddedAgent.CreatedByUserId,
+                            ModifiedByUserId = lastAddedAgent.ModifiedByUserId
+                        };
+
+                        return CreatedAtAction("GetAgent", new { id = lastAddedAgent.Id }, agentViewModel1);
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("Error", "There has been a fatal error in saving your Next of Kin Details");
+
+                        return BadRequest(ModelState);
+                    }
+                }
             }
             else
             {
-                ModelState.AddModelError("Error", "There has been a fatal error in saving your Next of Kin Details");
+                NextOfKin nextOfKin = new NextOfKin()
+                {
+                    Firstname = agentViewModel.NextOfKin.Firstname,
+                    Middlename = agentViewModel.NextOfKin.Middlename,
+                    Lastname = agentViewModel.NextOfKin.Lastname,
+                    MobileNumber = agentViewModel.NextOfKin.MobileNumber,
+                    CreatedByUserId = agentViewModel.CreatedByUserId,
+                    DateTimeCreated = DateTime.Now
+                };
 
-                return BadRequest(ModelState);
-            }
+                _context.NextOfKins.Add(nextOfKin);
+                await _context.SaveChangesAsync();
+
+                var lastAddedNextOfKin = _context.NextOfKins.OrderByDescending(x => x.Id).FirstOrDefault();
+
+                agentViewModel.CreatedByUserId = 3;
+
+                if (lastAddedNextOfKin != null)
+                {
+                    Agent agent = new Agent()
+                    {
+                        Firstname = agentViewModel.Firstname,
+                        Middlename = agentViewModel.Middlename,
+                        Lastname = agentViewModel.Lastname,
+                        DeviceOwnership = agentViewModel.DeviceOwnership,
+                        SupervisorId = agentViewModel.SupervisorId,
+                        Password = agentViewModel.Password,
+                        Gender = agentViewModel.Gender,
+                        Area = agentViewModel.Area,
+                        TownId = agentViewModel.TownId,
+                        ProvinceId = agentViewModel.ProvinceId,
+                        NationalityId = agentViewModel.NationalityId,
+                        IdNumber = agentViewModel.IdNumber,
+                        MobileNumber = agentViewModel.MobileNumber,
+                        AlternativeMobileNumber = agentViewModel.AlternativeMobileNumber,
+                        AgentCode = agentViewModel.AgentCode,
+                        PotrailUrl = agentViewModel.PotrailUrl,
+                        NationalIdFrontUrl = agentViewModel.NationalIdFrontUrl,
+                        NationalIdBackUrl = agentViewModel.NationalIdBackUrl,
+                        SignatureUrl = agentViewModel.SignatureUrl,
+                        AgentContractFormUrl = agentViewModel.AgentContractFormUrl,
+                        IsVerified = agentViewModel.IsVerified,
+                        NextOfKinId = lastAddedNextOfKin.Id,
+                        DateTimeCreated = DateTime.Now,
+                        CreatedByUserId = agentViewModel.CreatedByUserId,
+                        ModifiedByUserId = agentViewModel.ModifiedByUserId
+                    };
+
+                    _context.Agents.Add(agent);
+                    await _context.SaveChangesAsync();
+
+                    var lastAddedAgent = _context.Agents.OrderByDescending(x => x.Id).FirstOrDefault();
+
+                    var agentViewModel1 = new AgentViewModel()
+                    {
+                        Id = lastAddedAgent.Id,
+                        Firstname = lastAddedAgent.Firstname,
+                        Middlename = lastAddedAgent.Middlename,
+                        Lastname = lastAddedAgent.Lastname,
+                        DeviceOwnership = lastAddedAgent.DeviceOwnership,
+                        SupervisorId = lastAddedAgent.SupervisorId,
+                        Password = lastAddedAgent.Password,
+                        Gender = lastAddedAgent.Gender,
+                        Area = lastAddedAgent.Area,
+                        TownId = lastAddedAgent.TownId,
+                        ProvinceId = lastAddedAgent.ProvinceId,
+                        NationalityId = lastAddedAgent.NationalityId,
+                        IdNumber = lastAddedAgent.IdNumber,
+                        MobileNumber = lastAddedAgent.MobileNumber,
+                        AlternativeMobileNumber = lastAddedAgent.AlternativeMobileNumber,
+                        AgentCode = lastAddedAgent.AgentCode,
+                        IsVerified = lastAddedAgent.IsVerified,
+                        NextOfKin = _context.NextOfKins.Where(x => x.Id == lastAddedAgent.NextOfKinId).FirstOrDefault(),
+                        DateTimeCreated = lastAddedAgent.DateTimeCreated,
+                        CreatedByUserId = lastAddedAgent.CreatedByUserId,
+                        ModifiedByUserId = lastAddedAgent.ModifiedByUserId
+                    };
+
+                    return CreatedAtAction("GetAgent", new { id = lastAddedAgent.Id }, agentViewModel1);
+                }
+                else
+                {
+                    ModelState.AddModelError("Error", "There has been a fatal error in saving your Next of Kin Details");
+
+                    return BadRequest(ModelState);
+                }
+            }            
         }
 
         // DELETE: api/Agents/5
@@ -355,17 +527,18 @@ namespace ZamtelWebAPI.Controllers
 
             if (nextOfKin == null)
             {
-                ModelState.AddModelError("Error", "Agent cannot be deleted. Agent Id does not exist");
+                ModelState.AddModelError("Error", "Agent cannot be deleted. Next of Kin Id does not exist");
 
                 return NotFound(ModelState);
             }
-
-            _context.NextOfKins.Remove(nextOfKin);
+                        
+            //_context.NextOfKins.Remove(nextOfKin);
             _context.Agents.Remove(agent);
             await _context.SaveChangesAsync();
 
             var agentViewModel = new AgentViewModel()
             {
+                Id = agent.Id,
                 Firstname = agent.Firstname,
                 Middlename = agent.Middlename,
                 Lastname = agent.Lastname,
@@ -383,7 +556,7 @@ namespace ZamtelWebAPI.Controllers
                 AgentCode = agent.AgentCode,
                 IsVerified = agent.IsVerified,
                 NextOfKinId = agent.NextOfKinId,
-                NextOfKin = _context.NextOfKins.Where(x => x.Id == agent.NextOfKinId).FirstOrDefault(),
+                NextOfKin = nextOfKin,
                 DateTimeCreated = agent.DateTimeCreated,
                 DateTimeModified = agent.DateTimeModified,
                 CreatedByUserId = agent.CreatedByUserId,

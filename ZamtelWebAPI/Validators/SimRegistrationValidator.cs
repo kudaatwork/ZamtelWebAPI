@@ -17,14 +17,31 @@ namespace ZamtelWebAPI.Validators
 
             When(x => x.Customer == null, () => 
             { 
-                RuleFor(x => x.Corporate).NotNull(); 
+                RuleFor(x => x.Corporate).NotNull();
+
+                RuleFor(x => x.Corporate.CorporateIdNumber).NotEmpty().NotNull();
+
+                RuleFor(x => x.Corporate.CompanyName).NotEmpty().NotNull();
+
+                RuleFor(x => x.Corporate.CompanyCoinumber).NotEmpty().NotNull();
+
+                RuleFor(x => x.Corporate.RegistrationDate).NotEmpty().NotNull();
+
+                RuleFor(x => x.Corporate.ProvinceId).GreaterThan(0).NotNull();
+
+                RuleFor(x => x.Corporate.TownId).GreaterThan(0).NotNull();
+
+                RuleFor(x => x.Corporate.Address).NotEmpty().NotNull();
+
+                RuleFor(x => x.Corporate.CompanyEmail).NotEmpty().NotNull();
+
+                RuleFor(x => x.Corporate.CorporateMobileNumber).NotEmpty().NotNull();
+
+                RuleFor(x => x.Corporate.IsCompanyGo).NotEmpty().NotNull();
             }).Otherwise(() => 
             { 
-                RuleFor(x => x.Customer).NotNull(); 
-            });
+                RuleFor(x => x.Customer).NotNull();
 
-            When(x => x.Customer != null, () =>
-            {
                 RuleFor(x => x.Customer.Firstname).NotEmpty().NotNull();
 
                 RuleFor(x => x.Customer.Lastname).NotEmpty().NotNull();
@@ -54,29 +71,6 @@ namespace ZamtelWebAPI.Validators
                 RuleFor(x => x.Customer.AlternativeMobileNumber).NotEmpty().NotNull().Matches(@"^(\+\d{1,2}\s?)?1?\-?\.?\s?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$").NotEqual(x => x.Customer.MobileNumber);
             });
 
-            When(x => x.Corporate != null, () =>
-            {
-                RuleFor(x => x.Corporate.CorporateIdNumber).NotEmpty().NotNull();
-
-                RuleFor(x => x.Corporate.CompanyName).NotEmpty().NotNull();
-
-                RuleFor(x => x.Corporate.CompanyCoinumber).NotEmpty().NotNull();
-
-                RuleFor(x => x.Corporate.RegistrationDate).NotEmpty().NotNull();
-
-                RuleFor(x => x.Corporate.ProvinceId).GreaterThan(0).NotNull();
-
-                RuleFor(x => x.Corporate.TownId).GreaterThan(0).NotNull();
-
-                RuleFor(x => x.Corporate.Address).NotEmpty().NotNull();
-
-                RuleFor(x => x.Corporate.CompanyEmail).NotEmpty().NotNull();
-
-                RuleFor(x => x.Corporate.CorporateMobileNumber).NotEmpty().NotNull();
-
-                RuleFor(x => x.Corporate.IsCompanyGo).NotEmpty().NotNull();                
-            });
-
         }
     }
 
@@ -87,6 +81,13 @@ namespace ZamtelWebAPI.Validators
         public SimRegistrationValidators(ZamtelContext context)
         {
             _context = context;
+        }
+
+        public bool IsNextOfKinMobileNumberExist(string mobileNumber)
+        {
+            var mobileNumberExists = _context.NextOfKins.Where(x => x.MobileNumber == mobileNumber).FirstOrDefault();
+
+            return mobileNumberExists != null;
         }
 
         public bool IsCustomerMobileNumberExist(string mobileNumber)
@@ -101,6 +102,13 @@ namespace ZamtelWebAPI.Validators
             var idNumberExists = _context.Customers.Where(x => x.NationalIdNumber == idNumber).FirstOrDefault();
 
             return idNumberExists != null;
+        }
+
+        public bool IsSerialNumberExist(string serialNumber)
+        {
+            var serialNumberExists = _context.SimRegistrationDetails.Where(x => x.SimSerialNumber == serialNumber).FirstOrDefault();
+
+            return serialNumberExists != null;
         }
 
         public bool IsCorporateMobileNumberExist(string mobileNumber)
