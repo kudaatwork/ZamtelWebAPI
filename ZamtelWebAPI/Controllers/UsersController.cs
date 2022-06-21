@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using ZamtelWebAPI.Models;
 
 namespace ZamtelWebAPI.Controllers
@@ -14,10 +19,12 @@ namespace ZamtelWebAPI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly ZamtelContext _context;
+        private readonly JWTSettings _jwtsettings;
 
-        public UsersController(ZamtelContext context)
+        public UsersController(ZamtelContext context, IOptions<JWTSettings> jwtsettings)
         {
             _context = context;
+            _jwtsettings = jwtsettings.Value;
         }
 
         // GET: api/Users
@@ -39,6 +46,62 @@ namespace ZamtelWebAPI.Controllers
             }
 
             return user;
+        }
+
+        //// GET: api/Users/5
+        //[HttpPost("Login")]
+        //public async Task<ActionResult<UserWithToken>> Login([FromBody] User user)
+        //{
+
+        //    var currentUser =  _context.Users.Where(x => x.Email == user.Email).FirstOrDefault();
+
+        //    if (currentUser == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    UserWithToken userWithToken = new UserWithToken(user);
+
+        //    if (userWithToken == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    var tokenHandler = new JwtSecurityTokenHandler();
+        //    var key = Encoding.ASCII.GetBytes(_jwtsettings.SecretKey);
+        //    var tokenDescriptor = new SecurityTokenDescriptor
+        //    {
+        //        Subject = new ClaimsIdentity(new Claim[]
+        //        {
+        //            new Claim(ClaimTypes.Name, user.Email)
+        //        }),
+        //        Expires = DateTime.Now.AddMonths(1),
+        //        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
+        //        SecurityAlgorithms.HmacSha256Signature)
+        //    };
+
+        //    var token = tokenHandler.CreateToken(tokenDescriptor);
+        //    userWithToken.Token = tokenHandler.WriteToken(token);
+
+        //    return userWithToken;
+        //}
+
+        // GET: api/Users/5
+        [HttpPost, Route("Login")]
+        public async Task<ActionResult<string>> Login()
+        {
+            var user = HttpContext.User.Identity.Name;
+
+            var currentUser = await _context.Users.Where(x => x.Email == user).FirstOrDefaultAsync();
+
+            if (currentUser == null)
+            {
+                return NotFound();
+            }
+
+            currentUser.Password = null;
+
+            return "Authenticated";
         }
 
         // PUT: api/Users/5

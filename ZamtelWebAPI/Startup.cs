@@ -13,6 +13,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using ZamtelWebAPI.Models;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication;
+using ZamtelWebAPI.Handlers;
 
 namespace ZamtelWebAPI
 {
@@ -36,9 +38,13 @@ namespace ZamtelWebAPI
 
             services.AddDbContext<ZamtelContext>(options => options.UseSqlServer(Configuration.GetConnectionString("ZamtelDb")));
 
+            services.AddAuthentication("BasicAuthentication").AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
+
+            var jwtSection = Configuration.GetSection("JWTSettings");
+            services.Configure<JWTSettings>(jwtSection);
+
             services.AddSwaggerGen(gen => gen.SwaggerDoc("v1.0", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Zamtel KYC Web API", Version = "v1.0"}));
 
-            // /swagger/v1.0/swagger.json
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -51,7 +57,9 @@ namespace ZamtelWebAPI
 
             app.UseHttpsRedirection();
 
-            app.UseRouting();           
+            app.UseRouting();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

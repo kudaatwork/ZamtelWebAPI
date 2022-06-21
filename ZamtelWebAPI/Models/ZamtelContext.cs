@@ -577,6 +577,12 @@ namespace ZamtelWebAPI.Models
                 entity.Property(e => e.MobileNumber)
                     .HasMaxLength(20)
                     .IsUnicode(false);
+
+                entity.Property(e => e.Password).IsUnicode(false);
+
+                entity.Property(e => e.Username)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
             });
 
             OnModelCreatingPartial(modelBuilder);
